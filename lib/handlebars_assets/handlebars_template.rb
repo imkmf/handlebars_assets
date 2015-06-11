@@ -58,7 +58,7 @@ module HandlebarsAssets
 
       # handle the case of multiple frameworks combined with ember
       # DEFER: use extension setup for ember
-      if (HandlebarsAssets::Config.multiple_frameworks? && @template_path.is_ember?) ||
+      if (HandlebarsAssets::Config.multiple_frameworks? && (@template_path.is_ember? || @template_path.is_html_bars?)) ||
          (HandlebarsAssets::Config.ember? && !HandlebarsAssets::Config.multiple_frameworks?)
         compile_ember(source)
       else
@@ -67,7 +67,8 @@ module HandlebarsAssets
     end
 
     def compile_ember(source)
-      "window.Ember.TEMPLATES[#{@template_path.name}] = Ember.Handlebars.compile(#{JSON.dump(source)});"
+      global = @template_path.is_html_bars? ? "HTMLBars" : "Handlebars"
+      "window.Ember.TEMPLATES[#{@template_path.name}] = Ember.#{global}.compile(#{JSON.dump(source)});"
     end
 
     def compile_default(source)
@@ -177,6 +178,10 @@ module HandlebarsAssets
           result ||= check_extension(ext)
         end
         result
+      end
+
+      def is_html_bars?
+        check_extension('html_bars')
       end
 
       def is_partial?
